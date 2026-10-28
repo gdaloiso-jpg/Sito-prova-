@@ -22,9 +22,112 @@
     const max = document.documentElement.scrollHeight - innerHeight;
     progress.style.transform = `scaleX(${max > 0 ? y / max : 0})`;
     const c = contact.getBoundingClientRect();
-    sticky.classList.toggle("is-visible", y > innerHeight * 0.7 && !(c.top < innerHeight && c.bottom > 0));
+    const introEnd = intro.offsetTop + intro.offsetHeight;
+    sticky.classList.toggle("is-visible", y > introEnd - innerHeight * 0.3 && !(c.top < innerHeight && c.bottom > 0));
     parallax();
+    introScroll();
   };
+
+  /* ---------- Intro animata: i fotogrammi del video seguono lo scroll ---------- */
+  const intro = $("#intro");
+  const introScroll = (() => {
+    if (reduced) {
+      // Chi preferisce meno movimento vede il video in loop, senza scroll legato
+      intro.classList.add("intro--static");
+      const v = $(".intro__video", intro);
+      v.preload = "auto";
+      v.play().catch(() => {});
+      return () => {};
+    }
+    const FRAMES = 120;
+    const canvas = $(".intro__canvas", intro);
+    const ctx = canvas.getContext("2d");
+    const sampler = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
+    const frames = [];
+    const steps = $$("[data-from]", intro);
+    const bar = $(".intro__bar", intro);
+    const hint = $(".intro__hint", intro);
+    let current = -1;
+
+    const load = i => {
+      const img = new Image();
+      img.decoding = "async";
+      img.src = `assets/intro/f${String(i + 1).padStart(3, "0")}.webp`;
+      img.onload = () => { frames[i] = img; if (i === 0 || i === wanted()) draw(true); };
+      return img;
+    };
+    load(0);
+    // il primo fotogramma subito, gli altri appena la pagina ha finito di caricare
+    addEventListener("load", () => { for (let i = 1; i < FRAMES; i++) load(i); }, { once: true });
+
+    const progressOf = () => {
+      const r = intro.getBoundingClientRect();
+      return Math.min(Math.max(-r.top / (r.height - innerHeight), 0), 1);
+    };
+    // il video finisce all'88% dello scroll: l'ultimo tratto tiene fermo il logo con il bottone
+    const wanted = () => Math.round(Math.min(progressOf() / 0.88, 1) * (FRAMES - 1));
+
+    const resize = () => {
+      const dpr = Math.min(devicePixelRatio || 1, 2);
+      canvas.width = Math.round(canvas.clientWidth * dpr);
+      canvas.height = Math.round(canvas.clientHeight * dpr);
+      draw(true);
+    };
+
+    function draw(force) {
+      let i = wanted();
+      while (i > 0 && !frames[i]) i--; // se il fotogramma non è ancora arrivato usa il più vicino
+      const img = frames[i];
+      if (!img || (i === current && !force)) return;
+      current = i;
+      const W = canvas.width, H = canvas.height, iw = img.naturalWidth, ih = img.naturalHeight;
+      // colore del bordo del fotogramma, per riempire lo spazio intorno su schermi verticali
+      let [r, g, b] = [244, 246, 249];
+      try {
+        sampler.drawImage(img, 0, 0, 4, 4);
+        [r, g, b] = sampler.getImageData(0, 0, 1, 1).data;
+      } catch { /* aperto da file locale: resta il colore di default */ }
+      const bg = `rgb(${r},${g},${b})`;
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, W, H);
+      const portrait = W / H < 1.1;
+      let dw, dh, dx, dy;
+      if (portrait) {
+        // su schermi verticali ingrandisce il centro della scena e negli ultimi fotogrammi allarga per mostrare il logo intero
+        const t = Math.min(Math.max((i - 100) / 19, 0), 1);
+        dw = W * (1.7 - 0.75 * t);
+        dh = dw * ih / iw;
+        dx = W / 2 - dw * (0.56 - 0.06 * t);
+        dy = H * 0.42 - dh / 2;
+      } else {
+        const s = Math.max(W / iw, H / ih);
+        dw = iw * s; dh = ih * s; dx = (W - dw) / 2; dy = (H - dh) / 2;
+      }
+      ctx.drawImage(img, dx, dy, dw, dh);
+      if (portrait) {
+        // sfuma i bordi sopra e sotto nel colore di sfondo
+        const fade = dh * 0.18;
+        for (const [y0, y1] of [[dy, dy + fade], [dy + dh, dy + dh - fade]]) {
+          const gr = ctx.createLinearGradient(0, y0, 0, y1);
+          gr.addColorStop(0, bg);
+          gr.addColorStop(1, `rgba(${r},${g},${b},0)`);
+          ctx.fillStyle = gr;
+          ctx.fillRect(0, Math.min(y0, y1), W, fade);
+        }
+      }
+    }
+
+    addEventListener("resize", resize);
+    resize();
+
+    return () => {
+      const p = progressOf();
+      draw(false);
+      bar.style.transform = `scaleX(${p})`;
+      hint.classList.toggle("is-gone", p > 0.02);
+      steps.forEach(el => el.classList.toggle("is-on", p >= +el.dataset.from && p < +el.dataset.to));
+    };
+  })();
 
   /* ---------- Menu mobile ---------- */
   const setMenu = open => {

@@ -21,7 +21,7 @@
   <div class="progress" aria-hidden="true"></div>
 
   <!-- ============ HEADER ============ -->
-  <header class="header" id="top">
+  <header class="header header--light" id="top">
     <div class="container header__inner">
       <a href="#top" class="logo" aria-label="Ital Communications — torna all'inizio">
         <img src="assets/img/logo.png" alt="Ital Communications — A strategic communication agency" class="logo__dark" width="610" height="135">
@@ -41,8 +41,32 @@
   </header>
 
   <main>
+    <!-- ============ INTRO ANIMATA (si muove con lo scroll) ============ -->
+    <section class="intro" id="intro" aria-label="Cosa facciamo, in 8 secondi">
+      <div class="intro__stage">
+        <canvas class="intro__canvas" width="1280" height="716" aria-hidden="true"></canvas>
+        <video class="intro__video" src="assets/video/intro.mp4" muted playsinline loop preload="none" aria-hidden="true"></video>
+
+        <ol class="intro__steps">
+          <li class="intro__step" data-from="0" data-to=".24"><span class="intro__k">01 · Ufficio stampa</span><strong>Portiamo il tuo messaggio sui media nazionali che contano.</strong></li>
+          <li class="intro__step" data-from=".25" data-to=".39"><span class="intro__k">02 · Video e brand journalism</span><strong>Raccontiamo la tua identità con contenuti di qualità giornalistica.</strong></li>
+          <li class="intro__step" data-from=".40" data-to=".52"><span class="intro__k">03 · Podcast</span><strong>Diamo voce ai valori del tuo brand.</strong></li>
+          <li class="intro__step" data-from=".53" data-to=".67"><span class="intro__k">04 · Digital &amp; social media</span><strong>Credibilità e risonanza nel mondo digitale.</strong></li>
+          <li class="intro__step" data-from=".68" data-to=".81"><span class="intro__k">05 · Relazioni</span><strong>Una rete di media, istituzioni e stakeholder.</strong></li>
+        </ol>
+        <div class="intro__end" data-from=".86" data-to="1.01">
+          <p>Agenzia indipendente di comunicazione strategica</p>
+          <a href="#contatti" class="btn btn--primary">Parliamo del tuo progetto <span class="arrow">→</span></a>
+        </div>
+
+        <div class="intro__rail" aria-hidden="true"><span class="intro__bar"></span></div>
+        <div class="intro__hint" aria-hidden="true"><span class="intro__mouse"></span>Scorri per scoprire cosa facciamo</div>
+        <a href="#inizio" class="intro__skip">Salta l'intro ↓</a>
+      </div>
+    </section>
+
     <!-- ============ HERO ============ -->
-    <section class="hero">
+    <section class="hero" id="inizio">
       <div class="hero__slides" aria-hidden="true">
         <img src="assets/img/gallery/41.webp" alt="" class="is-on">
         <img src="assets/img/gallery/26.webp" alt="">
